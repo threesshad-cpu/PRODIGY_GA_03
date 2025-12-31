@@ -63,17 +63,21 @@ const DATASETS = {
    DOM ELEMENTS
 ============================= */
 const topicSelect = document.getElementById("topic");
-const promptsDiv = document.getElementById("prompts");
+const promptContainer = document.getElementById("promptContainer");
 const output = document.getElementById("output");
 
-let selected = new Set();
+/* ===============================
+   STATE
+================================ */
+let selectedPrompt = null;
 
-/* =============================
-   RENDER PROMPT CARDS
-============================= */
+/* ===============================
+   RENDER PROMPTS (SINGLE SELECT)
+================================ */
 function renderPrompts() {
-  selected.clear();
-  promptsDiv.innerHTML = "";
+  promptContainer.innerHTML = "";
+  selectedPrompt = null;
+  output.innerText = "";
 
   DATASETS[topicSelect.value].forEach(text => {
     const card = document.createElement("div");
@@ -81,30 +85,35 @@ function renderPrompts() {
     card.innerText = text;
 
     card.onclick = () => {
-      card.classList.toggle("selected");
-      selected.has(text) ? selected.delete(text) : selected.add(text);
+      // Remove selection from all cards
+      document.querySelectorAll(".prompt-card").forEach(c =>
+        c.classList.remove("selected")
+      );
+
+      // Select only THIS card
+      card.classList.add("selected");
+      selectedPrompt = text;
     };
 
-    promptsDiv.appendChild(card);
+    promptContainer.appendChild(card);
   });
 }
 
 topicSelect.addEventListener("change", renderPrompts);
 renderPrompts();
 
-/* =============================
-   MARKOV CHAIN LOGIC (N-GRAM)
-============================= */
+/* ===============================
+   MARKOV CHAIN (PROPER LOGIC)
+================================ */
 function buildMarkovChain(sentences, order = 2) {
   const chain = {};
 
   sentences.forEach(sentence => {
-    const words = sentence.toLowerCase().split(/\s+/);
+    const words = sentence.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/);
 
-    for (let i = 0; i <= words.length - order; i++) {
+    for (let i = 0; i < words.length - order; i++) {
       const key = words.slice(i, i + order).join(" ");
       const next = words[i + order];
-      if (!next) continue;
 
       if (!chain[key]) chain[key] = [];
       chain[key].push(next);
@@ -114,44 +123,47 @@ function buildMarkovChain(sentences, order = 2) {
   return chain;
 }
 
-function generateSentence(chain, order = 2, maxWords = 18) {
-  const keys = Object.keys(chain);
-  let current = keys[Math.floor(Math.random() * keys.length)];
-  let result = current.split(" ");
+function generateSentence(chain, seed, order = 2, maxWords = 20) {
+  let words = seed.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/);
+
+  // Ensure seed length fits order
+  words = words.slice(-order);
+
+  let currentKey = words.join(" ");
+  let result = [...words];
 
   for (let i = 0; i < maxWords; i++) {
-    const nextOptions = chain[current];
-    if (!nextOptions) break;
+    const options = chain[currentKey];
+    if (!options) break;
 
-    const next = nextOptions[Math.floor(Math.random() * nextOptions.length)];
+    const next = options[Math.floor(Math.random() * options.length)];
     result.push(next);
-    current = result.slice(-order).join(" ");
+    currentKey = result.slice(result.length - order).join(" ");
   }
 
   return result.join(" ") + ".";
 }
 
-/* =============================
+/* ===============================
    GENERATE BUTTON
-============================= */
+================================ */
 function generate() {
-  output.innerText = "";
-
-  const baseData =
-    selected.size > 0
-      ? Array.from(selected)
-      : DATASETS[topicSelect.value];
-
-  if (baseData.length < 5) {
-    output.innerText = "Please select more prompts.";
+  if (!selectedPrompt) {
+    output.innerText = "Please select ONE prompt to generate text.";
     return;
   }
 
-  const chain = buildMarkovChain(baseData, 2);
+  const dataset = DATASETS[topicSelect.value];
+
+  // Build chain from FULL topic (not just one sentence)
+  const chain = buildMarkovChain(dataset, 2);
+
   let results = [];
 
   for (let i = 0; i < 10; i++) {
-    results.push(`${i + 1}. ${generateSentence(chain)}`);
+    results.push(
+      `${i + 1}. ${generateSentence(chain, selectedPrompt)}`
+    );
   }
 
   output.innerText = results.join("\n");
