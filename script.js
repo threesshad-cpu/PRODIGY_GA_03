@@ -123,26 +123,37 @@ function buildMarkovChain(sentences, order = 2) {
   return chain;
 }
 
-function generateSentence(chain, seed, order = 2, maxWords = 20) {
-  let words = seed.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/);
+function generateSentence(chain, seed, order = 2, maxWords = 25) {
+  let words = seed
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .split(" ");
 
-  // Ensure seed length fits order
-  words = words.slice(-order);
-
-  let currentKey = words.join(" ");
+  // Start with last `order` words of selected prompt
   let result = [...words];
+  let key = result.slice(-order).join(" ");
 
   for (let i = 0; i < maxWords; i++) {
-    const options = chain[currentKey];
-    if (!options) break;
+    // 🔑 If chain breaks, jump to a random valid state
+    if (!chain[key]) {
+      key = Object.keys(chain)[
+        Math.floor(Math.random() * Object.keys(chain).length)
+      ];
+      result.push(...key.split(" "));
+      continue;
+    }
 
-    const next = options[Math.floor(Math.random() * options.length)];
+    const next =
+      chain[key][Math.floor(Math.random() * chain[key].length)];
+
     result.push(next);
-    currentKey = result.slice(result.length - order).join(" ");
+    key = result.slice(-order).join(" ");
   }
 
-  return result.join(" ") + ".";
+  // ✂️ Trim overly repetitive endings
+  return [...new Set(result)].join(" ") + ".";
 }
+
 
 /* ===============================
    GENERATE BUTTON
@@ -153,18 +164,16 @@ function generate() {
     return;
   }
 
-  const dataset = DATASETS[topicSelect.value];
+  const sentences = DATASETS[topicSelect.value];
+  const chain = buildMarkovChain(sentences, 2);
 
-  // Build chain from FULL topic (not just one sentence)
-  const chain = buildMarkovChain(dataset, 2);
-
-  let results = [];
+  let result = [];
 
   for (let i = 0; i < 10; i++) {
-    results.push(
-      `${i + 1}. ${generateSentence(chain, selectedPrompt)}`
+    result.push(
+      `${i + 1}. ${generateSentence(chain, selectedPrompt, 2)}`
     );
   }
 
-  output.innerText = results.join("\n");
+  output.innerText = result.join("\n");
 }
