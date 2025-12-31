@@ -49,17 +49,14 @@ This project intentionally steps back to highlight the **mathematical elegance a
 
 ## 📂 Project Structure
 
-PRODIGY_GA_03/
-│
-├── index.html # Application structure
-├── style.css # Glassmorphism UI styling
-├── script.js # Markov chain generation logic
-├── README.md # Project documentation
-├── vercel.json # Deployment routing configuration
-
-yaml
-Copy code
-
+- PRODIGY_GA_03/
+- │
+- ├── index.html # Application structure
+- ├── style.css # Glassmorphism UI styling
+- ├── script.js # Markov chain generation logic
+- ├── README.md # Project documentation
+- ├── vercel.json # Deployment routing configuration
+  
 ---
 
 ## ⚙️ How the System Works
@@ -134,10 +131,7 @@ The system includes curated technical datasets from:
 
 ---
 
-## 🚀 Live Deployment
-
-🔗 **Vercel Live App:**  
-https://markov-logic-textgen.vercel.app
+## 🚀 Live Deployment - 🔗 **Vercel Live App:**  https://markov-logic-textgen.vercel.app
 
 ---
 
@@ -173,7 +167,8 @@ This project lays a strong conceptual foundation for advanced NLP models such as
 
 ## 🤝 Credits
 
-- **Developer:** Thrisha D  
-- **Role:** Data Science Intern  
+- **Developer:** Threesssha D  
+- **Role:** Generative AI Intern  
 - **Organization:** Prodigy InfoTech  
 - **Task ID:** PRODIGY_GA_03
+
